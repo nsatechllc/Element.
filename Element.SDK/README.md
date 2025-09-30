@@ -13,9 +13,7 @@ Element. is engineered to deliver high-performance, quantum-safe cryptography sp
 
 By offloading all critical cryptographic functions to the **Element. QSM**, we ensure your **QLS over QUIC** traffic is protected by an uncompromised, **future-proof root of trust**. This solution eliminates the typical performance and compliance overhead associated with PQC migration.
 
-===========
-
-Status: Alpha (HTTP JSON subset implemented: /keys, /sign, /sign/batch, /verify, /resolve, Kyber KEM, /cbid/derive, /session/issue, /health, /ready)
+## Status: Alpha (HTTP JSON subset implemented: /keys, /sign, /sign/batch, /verify, /resolve, Kyber KEM, /cbid/derive, /session/issue, /health, /ready)
 
 Features (crate features):
 - http (default): enable HTTP transport via reqwest (aliased as `request`).
