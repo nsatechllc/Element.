@@ -1,0 +1,21 @@
+# Supply Chain Pin Manifest (initial draft)
+# Populate real commit hashes once pinned.
+
+[liboqs]
+# commit = "<git-commit-hash>"
+# version = "0.10.x"
+notes = "Replace with pinned commit from audited tag; build flags restrict to Dilithium + Kyber."
+
+[oqs-provider]
+# commit = "<git-commit-hash>"
+# optional = true
+notes = "Only needed for PQ TLS/QUIC hybrid; pin if provider path adopted."
+
+[liboqs-rust]
+crate = "oqs"
+version = "0.9.0"
+features = ["sigs","kyber"]
+notes = "Upgrade only after review of CHANGELOG and symbol diff."
+
+[process]
+rebuild_verification = "Rebuild in clean CI and compare sha256 of liboqs.so and (if present) oqsprovider.so against previous manifest."

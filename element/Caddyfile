@@ -1,0 +1,37 @@
+{
+	# Global options
+	email admin@nsatech.io
+	# Enforce ACME retries & disable HTTP challenge if you later close port 80:
+	# auto_https disable_http_challenge
+}
+
+# HTTP listener strictly redirects to HTTPS (permanent)
+http://api.nsatech.io {
+	redir https://api.nsatech.io{uri} 308
+}
+
+# Primary secure site
+api.nsatech.io {
+	encode zstd gzip
+
+	# Security headers
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cache-Control "no-store"
+	}
+
+	# Optionally protect metrics (replace hash with real bcrypt output)
+	@metrics path /metrics /metrics/* /metrics.text /metrics/text
+	basic_auth @metrics {
+		metrics JDJhJDEwJHNvbWVwYWNlaG9sZGVycGxhY2Vob2xkZXIuLi4u
+	}
+
+	# Upstream internal service (bind app to 127.0.0.1:8080)
+	reverse_proxy 127.0.0.1:8080 {
+		# Optionally pass request ID header through
+		header_up X-Request-ID {http.request.header.X-Request-ID}
+	}
+}

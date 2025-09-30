@@ -1,0 +1,8 @@
+/*
+ Automated · Intelligent · Natural
+ - Element. by NSA TECHNOLOGIES
+
+ Author: Daniel J. Sopher
+ © Copyright 2018, 2025. All Rights Reserved.
+*/
+use serde::{Serialize, Deserialize}; #[derive(Debug, Clone, Copy, Serialize, Deserialize)] #[serde(rename_all = "lowercase")] pub enum Alg { Dilithium5, Dilithium3 } impl Alg { pub fn as_str(&self) -> &'static str { match self { Alg::Dilithium5 => "dilithium5", Alg::Dilithium3 => "dilithium3" } } }

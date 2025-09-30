@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ 'main', 'master', '**/stable', 'stable/**' ]
+  pull_request:
+    branches: [ 'main', 'master', '**/stable', 'stable/**' ]
+
+jobs:
+  build:
+    name: Build, fmt, clippy, test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Rust
+        uses: dtolnay/gh-action-rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Ensure rustfmt is available
+        run: rustup component add rustfmt --toolchain stable
+
+      - name: Ensure clippy is available
+        run: rustup component add clippy --toolchain stable
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build debug
+        run: cargo build --workspace --locked
+
+      - name: Run tests
+        run: cargo test --workspace --locked --nocapture

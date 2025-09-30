@@ -1,0 +1,30 @@
+syntax = "proto3";
+package element.v1;
+
+// Key management and signing service
+service ElementSigner {
+  rpc GenerateKey (GenerateKeyRequest) returns (GenerateKeyResponse);
+  rpc SignDigest (SignDigestRequest) returns (SignDigestResponse);
+  rpc VerifySignature (VerifySignatureRequest) returns (VerifySignatureResponse);
+  rpc KyberKeyPair (KyberKeyPairRequest) returns (KyberKeyPairResponse);
+  rpc KyberEncapsulate (KyberEncapsulateRequest) returns (KyberEncapsulateResponse);
+  rpc KyberDecapsulate (KyberDecapsulateRequest) returns (KyberDecapsulateResponse);
+}
+
+message GenerateKeyRequest { string algorithm = 1; }
+message GenerateKeyResponse { string key_id = 1; string pubkey_b64 = 2; string algorithm = 3; uint64 created_at = 4; }
+
+message SignDigestRequest { string key_id = 1; bytes digest32 = 2; bytes context32 = 3; uint64 nonce = 4; }
+message SignDigestResponse { bytes signature = 1; string algorithm = 2; uint64 counter = 3; uint64 nonce = 4; }
+
+message VerifySignatureRequest { string key_id = 1; bytes digest32 = 2; bytes context32 = 3; bytes signature = 4; }
+message VerifySignatureResponse { bool valid = 1; string algorithm = 2; }
+
+message KyberKeyPairRequest { string strength = 1; }
+message KyberKeyPairResponse { bytes public_key = 1; bytes secret_key = 2; string strength = 3; }
+
+message KyberEncapsulateRequest { string strength = 1; bytes peer_public_key = 2; }
+message KyberEncapsulateResponse { bytes ciphertext = 1; bytes shared_secret = 2; string strength = 3; }
+
+message KyberDecapsulateRequest { string strength = 1; bytes secret_key = 2; bytes ciphertext = 3; }
+message KyberDecapsulateResponse { bytes shared_secret = 1; string strength = 2; }

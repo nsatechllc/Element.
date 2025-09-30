@@ -1,0 +1,27 @@
+[Unit]
+Description=Element PQC Crypto Service
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=element
+Group=element
+WorkingDirectory=/opt/element
+Environment=SE_LISTEN_ADDR=127.0.0.1:8080
+Environment=RUST_LOG=info
+Environment=SE_ALLOWED_ALGS=dilithium5,dilithium3
+Environment=SE_RATE_CAPACITY=500
+Environment=SE_RATE_FILL_PER_SEC=500
+ExecStart=/opt/element/element
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+AmbientCapabilities=
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,69 @@
+[package]
+name = "element"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "element"
+path = "src/lib.rs"
+
+[[bin]]
+name = "element-bin"
+path = "src/main.rs"
+
+[features]
+software = ["dep:tokio"]
+quic-overlay = ["software", "dep:quinn", "dep:rcgen", "dep:rustls", "dep:chacha20poly1305"]
+# crypto-pqc backend placeholder
+# crypto-pqc-backend = ["dep:crypto-pqc", "dep:tokio"]
+quic-native = []
+pqc = ["dep:oqs", "software"]
+grpc = ["software", "dep:tonic", "dep:prost", "dep:prost-types", "dep:tonic-prost"]
+otel = ["software", "dep:opentelemetry", "dep:opentelemetry_sdk", "dep:tracing-opentelemetry"]
+
+default = ["software"]
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+base64 = { workspace = true }
+sha3 = { workspace = true }
+hex = { workspace = true }
+sha2 = "0.10"
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+prometheus = { workspace = true }
+once_cell = { workspace = true }
+rand = { workspace = true }
+zeroize = "1.7"
+axum = { version = "0.7", features = ["json"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
+chrono = { version = "0.4", features = ["clock", "std"] }
+quinn = { version = "0.10", optional = true }
+tokio-util = { version = "0.7", optional = true }
+oqs = { version = "0.9.0", default-features = false, features = ["sigs","kyber"], optional = true }
+tonic = { version = "0.14", features = ["transport"], optional = true }
+prost = { version = "0.14", optional = true }
+prost-types = { version = "0.14", optional = true }
+tonic-prost = { version = "0.14", optional = true }
+rcgen = { version = "0.13", optional = true }
+rustls = { version = "0.21", optional = true }
+chacha20poly1305 = { version = "0.10", default-features = false, features = ["alloc"], optional = true }
+opentelemetry = { version = "0.23", optional = true }
+opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"], optional = true }
+tracing-opentelemetry = { version = "0.24", optional = true }
+uuid = { version = "1.10", features = ["v4"] }
+tower = "0.5"
+
+[dev-dependencies]
+serde_json = { workspace = true }
+reqwest = { version = "0.12", features = ["json"] }
+hyper = { version = "0.14", features = ["client"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+
+[build-dependencies]
+tonic-prost-build = { version = "0.14" }

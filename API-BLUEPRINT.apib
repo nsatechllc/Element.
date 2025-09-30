@@ -1,0 +1,332 @@
+FORMAT: 1A
+HOST: https://api.nsatech.io
+
+# PQC Element API
+
+High-level HTTP interface for post-quantum key management, signing (Dilithium), and Kyber KEM operations. All binary fields are Base64 unless specified.
+
+NOTE: A QUIC overlay (experimental) may be enabled at `udp://api.nsatech.io:<port>` performing a Kyber KEM handshake to derive a Channel Binding ID (CBID) and ephemeral AEAD key. Advanced clients should prefer QUIC for initial channel establishment, then issue an HTTP session token using the derived CBID for authenticated signing.
+
+## gRPC Service (element.v1.ElementSigner)
+gRPC endpoint (enabled with feature `grpc`) listens on `SE_GRPC_ADDR` (default: `0.0.0.0:50051`).
+
+Service: `element.v1.ElementSigner`
+
+Methods:
+1. GenerateKey
+    - Request: `GenerateKeyRequest { string algorithm }`
+    - Response: `GenerateKeyResponse { string key_id, string pubkey_b64, string algorithm, uint64 created_at }`
+2. SignDigest
+    - Request: `SignDigestRequest { string key_id, bytes digest32 (32), bytes context32 (32), uint64 nonce }`
+    - Response: `SignDigestResponse { bytes signature, string algorithm, uint64 counter, uint64 nonce }`
+3. VerifySignature
+    - Request: `VerifySignatureRequest { string key_id, bytes digest32 (32), bytes context32 (32), bytes signature }`
+    - Response: `VerifySignatureResponse { bool valid, string algorithm }`
+4. KyberKeyPair
+    - Request: `KyberKeyPairRequest { string strength (kyber768|kyber1024) }`
+    - Response: `KyberKeyPairResponse { bytes public_key, bytes secret_key, string strength }`
+5. KyberEncapsulate
+    - Request: `KyberEncapsulateRequest { string strength, bytes peer_public_key }`
+    - Response: `KyberEncapsulateResponse { bytes ciphertext, bytes shared_secret, string strength }`
+6. KyberDecapsulate
+    - Request: `KyberDecapsulateRequest { string strength, bytes secret_key, bytes ciphertext }`
+    - Response: `KyberDecapsulateResponse { bytes shared_secret, string strength }`
+
+Notes:
+- All binary fields are raw bytes in protobuf (not Base64) and delivered as such by gRPC clients.
+- Nonce rules are identical to HTTP: strictly incremental per key (starting at 1).
+- Context binding: 32-byte domain separation value mandatory under PQC signer.
+- Errors map to gRPC Status codes: INVALID_ARGUMENT, NOT_FOUND, FAILED_PRECONDITION, INTERNAL.
+
+## Group Health
+### Health Check [GET /health]
++ Response 200 (text/plain)
+    + Body
+            ok
+
+### Version [GET /version]
+Returns service build & feature metadata.
++ Response 200 (application/json)
+    + Attributes
+        + service: element (string)
+        + pkg_version: 0.1.0 (string)
+        + git_sha: abcdef1 (string)
+        + build_ts: 2025-09-29T18:22:00Z (string)
+        + features (object)
+            + pqc: true (boolean)
+            + grpc: true (boolean)
+            + quic_overlay: true (boolean)
+
+## Group Keys
+### Generate Dilithium Key [POST /keys]
++ Request (application/json)
+    + Attributes
+        + alg: dilithium5 (string, required)
++ Response 200 (application/json)
+    + Attributes
+        + key_id: `8f3ab1c2e4aa1122` (string)
+        + pubkey: (string, Base64 Dilithium public key)
+        + alg: dilithium5 (string)
+        + created_at: 1727600000 (number)
+
+## Group Sign
+### Sign Digest [POST /sign]
+Signs a 32-byte pre-hashed digest with 32-byte context binding.
++ Request (application/json)
+    + Attributes
+        + key_id: `8f3ab1c2e4aa1122`
+        + digest: (Base64, 32 bytes)
+        + context_binding: (Base64, 32 bytes)
+        + nonce: 1 (number)
++ Response 200 (application/json)
+    + Attributes
+        + signature: (Base64 Dilithium signature)
+        + alg: dilithium5
+        + counter: 1
+        + nonce: 1
+
+### Batch Sign Digests [POST /sign/batch]
+Submit multiple independent sign operations. Each item enforces its own nonce ordering.
+Request is processed best-effort; per-item status provided.
++ Request (application/json)
+    + Attributes
+        + items (array[Object])
+            + key_id (string)
+            + digest (Base64, 32 bytes)
+            + context_binding (Base64, 32 bytes)
+            + nonce (number)
++ Response 200 (application/json)
+    + Attributes
+        + results (array)
+            + key_id
+            + signature (Base64 or empty if failed)
+            + alg (string or empty if failed)
+            + counter (number)
+            + nonce (number)
+            + status (string, e.g. OK | KEY_NOT_FOUND | NONCE_OUT_OF_ORDER | INVALID_LENGTH | ALG_NOT_ALLOWED | RATE_LIMIT)
+
+### Verify Signature [POST /verify]
++ Request (application/json)
+    + Attributes
+        + key_id: `8f3ab1c2e4aa1122`
+        + digest: (Base64, 32 bytes)
+        + signature: (Base64)
+        + context_binding: (Base64, 32 bytes, required under PQC)
++ Response 200 (application/json)
+    + Attributes
+        + valid: true (boolean)
+        + alg: dilithium5
+
+## Group Resolve
+### Resolve Address [POST /resolve]
++ Request (application/json)
+    + Attributes
+        + pubkey: (Base64 public key)
+        + alg: dilithium5
++ Response 200 (application/json)
+    + Attributes
+        + address: (hex, 20 bytes)
+        + alg: dilithium5
+
+## Group Session
+Session tokens gate signing & verification when `SE_REQUIRE_SESSION_TOKEN=1`.
+
+Authentication:
+1. Preferred header: `Authorization: Bearer <token>`
+2. Fallback header: `X-SE-Session: <token>`
+
+Missing or invalid when required → 401 with `error_code: SESSION_INVALID`.
+
+#### Session Acquisition Flow
+
+Obtain a session token in two phases:
+
+1. Establish a shared secret & derive a Channel Binding ID (CBID)
+2. Exchange the CBID for a time‑limited session token
+
+There are two supported ways to derive the CBID:
+
+1. QUIC Overlay (preferred when `quic_overlay` feature & `SE_QUIC_ADDR` are enabled)
+2. HTTP Kyber Derivation Endpoint (`POST /cbid/derive`) when QUIC is not used or unavailable
+
+CBID Definition:
+```
+cbid = HEX( SHA3-256( shared_secret || tag ) )  // 64 hex chars
+```
+Where:
+- `shared_secret` comes from a Kyber KEM (encapsulate/decapsulate) using the chosen strength (default `kyber768`).
+- `tag` is optional (<= 64 bytes before Base64); it domain-separates different logical channels that reuse the same KEM key pair.
+ - `tag` is optional (<= 64 bytes before Base64); it domain-separates different logical channels that reuse the same KEM key pair. If omitted the service treats the tag as the empty byte string when computing CBID (i.e. CBID = SHA3-256(shared_secret || "")).
+
+---
+##### Path A: QUIC Overlay
+1. Client opens a QUIC connection to `udp://api.nsatech.io:<port>` (port = value of `SE_QUIC_ADDR` UDP port).
+2. QUIC handshake performs an internal Kyber KEM; both sides derive `shared_secret` (implementation detail, opaque to HTTP layer).
+3. Client library (your QUIC integration) exposes the resulting `cbid` (already SHA3-256 hashed as above).
+4. Client calls `POST /session/issue` over HTTPS with the `cbid` to obtain a token.
+
+Advantages: One RTT (QUIC handshake) to both establish transport security and derive CBID; no public key material transmitted in an extra HTTP round trip.
+
+---
+##### Path B: HTTP Derivation Endpoint
+Use when QUIC overlay is disabled or your client stack does not yet support it.
+
+Steps:
+1. Generate a Kyber key pair (locally or via `POST /kem/kyber/keypair`). Keep `secret_key` client-side; you will not send it to the server.
+2. (Optional) Decide on a `tag` (short context string) and Base64 encode it.
+3. Call `POST /cbid/derive` with:
+     - `peer_pubkey`: Base64 Kyber public key you generated.
+     - `kem_strength` (optional; defaults to `kyber768`). Must match your generated key pair strength.
+     - `tag` (optional; Base64).
+4. Server responds with:
+     - `ciphertext`: Base64 Kyber ciphertext
+     - `cbid`: 64 hex chars (server’s computed value)
+5. Locally decapsulate `ciphertext` using your `secret_key` → `shared_secret`.
+6. Recompute `cbid` locally via `SHA3-256(shared_secret || tag)` and hex‑encode; MUST exactly match server’s value. If mismatch, abort.
+7. Call `POST /session/issue` with the confirmed `cbid`.
+
+Example (HTTP Path B):
+
+Generate key pair (optional – you can also generate locally):
+```
+curl -s -X POST https://api.nsatech.io/kem/kyber/keypair -H 'Content-Type: application/json' -d '{"strength":"kyber768"}' \
+    | jq -r '.pubkey,.secret_key' > /tmp/pub_and_sec.txt
+```
+
+Derive CBID:
+```
+PUBKEY=$(head -n1 /tmp/pub_and_sec.txt)
+TAG_B64=$(echo -n "example-channel" | base64 -w0)
+curl -s -X POST https://api.nsatech.io/cbid/derive -H 'Content-Type: application/json' \
+    -d '{"peer_pubkey":"'"$PUBKEY"'","tag":"'"$TAG_B64"'"}'
+```
+Response (sample):
+```
+{
+    "cbid": "4b9ea1d0843ed0d65c4cedf8d0b1fa02194d7bdbb1eab2d2a46d0ce6af1f9a33",
+    "ciphertext": "Base64KyberCiphertext=="
+}
+```
+
+Decapsulate & verify CBID (pseudo‑code):
+```
+shared_secret = kyber_decapsulate(ciphertext, secret_key)
+computed = hex( SHA3_256( shared_secret || tag_bytes ) )
+assert computed == cbid
+```
+
+Issue session token (once CBID verified):
+```
+curl -s -X POST https://api.nsatech.io/session/issue -H 'Content-Type: application/json' \
+    -d '{"cbid":"4b9ea1d0843ed0d65c4cedf8d0b1fa02194d7bdbb1eab2d2a46d0ce6af1f9a33","ttl_secs":900}'
+```
+
+Sample token response:
+```
+{
+    "token": "w6A1A2I0f7Y5N1qJ...==",
+    "expires_at": 1727600900
+}
+```
+
+Use token in subsequent requests:
+```
+curl -X POST https://api.nsatech.io/sign -H "Authorization: Bearer $TOKEN" ...
+```
+
+Security Notes:
+- Tokens are opaque; the server stores binding (cbid + expiry) in memory.
+- Revocation is passive (expiry). To force earlier invalidation reduce `ttl_secs` or restart service (clears store).
+- Re-derive a fresh CBID (new Kyber key pair and/or tag) to logically compartmentalize sessions.
+- A token is only valid if the same CBID was previously derived; tampering with `cbid` in /session/issue yields `SESSION_INVALID` (401).
+
+Failure Modes:
+- Mismatched CBID recomputation locally indicates either implementation bug or active interference → discard and retry with new key pair.
+- Providing an unsupported `kem_strength` returns `UNSUPPORTED_KEM` (400).
+- Supplying malformed Base64 returns an `INVALID_BASE64_*` code.
+
+Performance Tips:
+- You can reuse one Kyber key pair for multiple CBID derivations by varying `tag`, but best practice is ephemeral single‑use key pairs to minimize secret key exposure window.
+- QUIC path amortizes handshake + CBID derivation; prefer it for high request volume workloads.
+
+### Issue Session Token [POST /session/issue]
++ Request (application/json)
+    + Attributes
+        + cbid: `4b9e...` (hex, 64 chars) - previously derived CBID binding the channel context
+        + ttl_secs: 900 (number, optional, default 600, max 3600)
++ Response 200 (application/json)
+    + Attributes
+        + token: (Base64 opaque)
+        + expires_at: 1727600900 (number, unix seconds)
+
+Notes:
+- Metric `se_session_tokens` exposes active token count.
+- Expired tokens are reaped periodically (~30s interval).
+- Reissue to rotate; both old & new valid until old expiry.
+
+## Group Metrics
+### Metrics JSON [GET /metrics]
+Returns minimal JSON summary.
++ Response 200 (application/json)
+
+### Metrics Prometheus [GET /metrics/text]
++ Response 200 (text/plain)
+
+## Group Kyber KEM
+### Generate Kyber Key Pair [POST /kem/kyber/keypair]
++ Request (application/json)
+    + Attributes
+        + strength: kyber768 (string, optional: kyber768|kyber1024)
++ Response 200 (application/json)
+    + Attributes
+        + pubkey: (Base64)
+        + secret_key: (Base64)
+        + strength: kyber768
+
+### Encapsulate [POST /kem/kyber/encapsulate]
++ Request (application/json)
+    + Attributes
+        + strength: kyber768 (optional)
+        + peer_pubkey: (Base64)
++ Response 200 (application/json)
+    + Attributes
+        + ciphertext: (Base64)
+        + shared_secret: (Base64)
+        + strength: kyber768
+
+### Decapsulate [POST /kem/kyber/decapsulate]
++ Request (application/json)
+    + Attributes
+        + strength: kyber768 (optional)
+        + secret_key: (Base64)
+        + ciphertext: (Base64)
++ Response 200 (application/json)
+    + Attributes
+        + shared_secret: (Base64)
+        + strength: kyber768
+
+## Group CBID
+### Derive Channel Binding ID [POST /cbid/derive]
+Encapsulates to peer key and derives SHA3-256(shared_secret || tag) hex.
++ Request (application/json)
+    + Attributes
+        + kem_strength: kyber768 (optional)
+        + peer_pubkey: (Base64)
+        + tag: (Base64 <= 64 bytes)  
+            Note: The `tag` field is REQUIRED for HTTP `/cbid/derive`. It MUST be Base64-encoded and decode to at most 64 raw bytes. The server returns `INVALID_BASE64_TAG` on decode errors and `TAG_TOO_LONG` when the decoded tag exceeds 64 bytes. The CBID is computed as SHA3-256(shared_secret || tag).
++ Response 200 (application/json)
+    + Attributes
+        + cbid: (hex, 64 chars)
+        + ciphertext: (Base64)
+
+## Errors
+Common error codes (HTTP 400 unless otherwise noted):
+- ALG_NOT_ALLOWED
+- NONCE_OUT_OF_ORDER (409)
+- INVALID_BASE64_* variants
+- CONTEXT_REQUIRED
+- UNSUPPORTED_KEM
+- TAG_TOO_LONG
+- RATE_LIMIT (429 for single request; per-item status in batch)
+- PQC_DISABLED
+
