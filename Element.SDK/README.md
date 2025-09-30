@@ -9,7 +9,7 @@
 
 Welcome to the **Element.SDK**, the secure, proprietary software development kit that connects your applications to the powerful **Element. Quantum Security Module (QSM)**.
 
-Element. is engineered to deliver high-performance, quantum-safe cryptography specifically for demanding modern transport protocols. **While fundamentally a high-assurance Hardware Security Module (HSM)**, we brand it as a QSM to emphasize its specialization: securing your traffic against the quantum threat.
+Element. has been engineered to deliver high-performance, quantum-safe cryptography specifically for demanding modern transport protocols. **While fundamentally a high-assurance Hardware Security Module (HSM)**, we brand it as a QSM to emphasize its specialization: securing your traffic against the quantum threat.
 
 By offloading all critical cryptographic functions to the **Element. QSM**, we ensure your **QLS over QUIC** traffic is protected by an uncompromised, **future-proof root of trust**. This solution eliminates the typical performance and compliance overhead associated with PQC migration.
 
