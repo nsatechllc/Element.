@@ -1,1 +1,0 @@
-use serde::Serialize; use thiserror::Error; #[derive(Debug, Error)] pub enum SeError { #[error("invalid request: {0}")] InvalidRequest(String), #[error("internal error")] Internal, } #[derive(Serialize)] pub struct ErrorBody<'a> { pub error_code: &'a str, pub message: &'a str, }
