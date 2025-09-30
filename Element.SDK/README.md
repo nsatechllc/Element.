@@ -63,9 +63,7 @@ Roadmap Alignment:
 P0: Structured scope signing, nonce introspection, audit log streaming (pending server features).
 
 License: Proprietary (internal use only).
-# Element.SDK (Rust)
-
-Async Rust client for the NSA Technologies Element remote secure element.
+# Element.SDK
 
 ## Features
 - Key generation (Dilithium5 / Dilithium3)
