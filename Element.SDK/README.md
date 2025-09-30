@@ -1,117 +1,59 @@
-Element.SDK
-===========
+<h1 align="center">Element.SDK : Post-Quantum Cryptographics</h1>
+<h3 align="center">by NSA TECHNOLOGIES LLC</h3>
+<p align="center"><b>Automated &nbsp;·&nbsp; Intelligent &nbsp;·&nbsp; Natural</b></p>
+<p align="center"><i>Author: Daniel J. Sopher</i></p>
+<br><br>
 
-Rust client SDK for the NSA Technologies Element remote secure element ("Element.") service.
 
-Status: Alpha (HTTP JSON subset implemented: /keys, /sign, /sign/batch, /verify, /resolve, Kyber KEM, /cbid/derive, /session/issue, /health, /ready)
+## Element.SDK : Post-Quantum Cryptography
 
-Features (crate features):
-- http (default): enable HTTP transport via reqwest (aliased as `request`).
-- retry (default): simple exponential backoff for idempotent ops.
-- structured-scope (future): sign scope builder & /sign/scope integration.
-- quic / grpc (placeholders).
-- metrics-json (placeholder parser).
+Welcome to the **Element.SDK**, the secure, proprietary software development kit that connects your applications to the powerful **Element. Quantum Security Module (QSM)**.
 
-Quick Start:
-```rust,ignore
-use element_sdk::{ElementClient, Algorithm, SignDigestRequest};
-use sha3::{Digest, Sha3_256};
+Element. is engineered to deliver high-performance, quantum-safe cryptography specifically for demanding modern transport protocols. **While fundamentally a high-assurance Hardware Security Module (HSM)**, we brand it as a QSM to emphasize its specialization: securing your traffic against the quantum threat.
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = ElementClient::builder("https://api.nsatech.io").build()?;
-    let key = client.generate_key(Algorithm::Dilithium5).await?;
-    // Derive CBID (example tag + local Kyber pair omitted for brevity; usually call kyber_keypair then derive_cbid)
-    // For tests you may already have a CBID; here we just fake a 32B context for illustration only.
-    let cbid = [0u8;32];
-    let digest = Sha3_256::digest(b"example");
-    let req = SignDigestRequest { key_id: key.key_id.clone(), digest32: digest.into(), context_binding32: cbid, nonce: 1 };
-    let sig = client.sign_digest(req).await?;
-    println!("signature bytes: {}", sig.signature.len());
-    Ok(())
-}
-```
+By offloading all critical cryptographic functions to the **Element. QSM**, we ensure your **QLS (Quantum Layer Security) over QUIC** traffic is protected by an uncompromised, **future-proof root of trust**. This solution eliminates the typical performance and compliance overhead associated with PQC migration.
 
-Live Integration Test:
-Set environment variables before running:
-```
-export ELEMENT_BASE_URL=https://api.nsatech.io
-# optional: ELEMENT_FORCE_KEY_ALG=dilithium5
-```
-Run:
-```
-cargo test -p element-sdk -- --ignored --nocapture element_live
-```
+### ✨ The Element. Advantage: Proprietary QSM PQC Assurance
 
-Security Notes:
-- Always supply a 32-byte CBID context when signing (from /cbid/derive or QUIC overlay). Zero bytes are NOT valid in production.
-- Track nonces; the first accepted nonce is 1 and increments by 1.
+The core strength of the Element. solution is the fully integrated, proprietary architecture, designed from the ground up to address the unique requirements of **Post-Quantum Cryptography (PQC)**, including key establishment and authentication using the new NIST standards.
 
-Roadmap Alignment:
-P0: Structured scope signing, nonce introspection, audit log streaming (pending server features).
+| Proprietary Component | The PQC Security Value Proposition |
+| :--- | :--- |
+| **Element. QSM (The Hardware)** | **Uncompromised Quantum-Safe Key Protection.** The Element. is a physically **hardened, tamper-resistant module**. All cryptographic keys (including classic and PQC keys) are **born, live, and die exclusively within this secure hardware boundary**, providing the highest level of assurance against both classical and quantum-era threats ("harvest now, decrypt later" attacks). |
+| **QLS-Over-QUIC Engine** | **Accelerated PQC for High-Speed QUIC.** We utilize proprietary firmware and hardware acceleration to overcome the performance overhead inherent in PQC algorithms (which have larger keys and signatures). Our dedicated engine ensures near-zero-latency for your QLS handshake, supporting: <ul><li>**ML-KEM** (Crystals-Kyber) for **Quantum-Safe Key Exchange**</li><li>**ML-DSA** (Crystals-Dilithium) for **Quantum-Safe Authentication**</li></ul> |
+| **Proprietary Operating Layer** | **Zero Exposure & Total Crypto-Agility.** The SDK provides a strictly controlled API surface. Keys never leave the QSM for any operation. The proprietary operating system enforces strict separation of duties and continuous audit logging, allowing for **rapid cryptographic updates** without hardware replacement (Crypto-Agility). |
 
-License: Proprietary (internal use only).
-# Element.SDK (Rust)
+### 🚀 Key Capabilities: Securing the Future of Transport
 
-Async Rust client for the NSA Technologies Element remote secure element.
+Element.SDK offers a robust set of services, all powered by the high-assurance Element. QSM:
 
-## Features
-- Key generation (Dilithium5 / Dilithium3)
-- Signing & batch signing with nonce tracking helper
-- Signature verification
-- Kyber KEM (keypair, encapsulate, decapsulate)
-- CBID derivation (HTTP path)
-- Session token issuance
-- Health / readiness queries
+* **QUIC/QLS Handshake Services:** Secure and rapid post-quantum key agreement and digital signature verification for establishing quantum-safe QUIC connections.
+* **Remote Key Management:** Secure generation, storage, usage, and destruction of all cryptographic keys, managed exclusively within the **Element. QSM**.
+* **Compliance & Audit:** Enterprise-grade audit logging, strict nonce management, and irrefutable proof-of-operations for regulatory compliance.
+* **Scalable APIs:** Robust endpoints for signing, key derivation (CBID), session management, and health checks, designed for high-availability cloud deployments.
 
-Planned:
-- Structured sign scope builder & endpoint
-- QUIC overlay derivation
-- gRPC streaming sign
-- Metrics JSON parsing
+### 🔑 Access & Usage Restrictions
 
-## Quick Start
-```rust,no_run
-use element_sdk::{ElementClient, Algorithm, SignDigestRequest};
-use base64::{engine::general_purpose::STANDARD, Engine};
-use sha3::{Digest, Sha3_256};
+**Element.SDK and the Element. QSM service are strictly proprietary assets of NSA Technologies LLC.**
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = ElementClient::builder("https://api.nsatech.io").build()?;
+This SDK is **exclusively available** for:
 
-    // 1. Generate key
-    let key = client.generate_key(Algorithm::Dilithium5).await?;
+1.  **Internal NSA Technologies LLC Teams**
+2.  **Approved External Clients** under a valid commercial service agreement.
 
-    // 2. Derive CBID (simplified placeholder - real flow: Kyber key pair then /cbid/derive)
-    // here we assume you already have a peer public key and tag
+**Redistribution, reverse engineering, or external use is strictly prohibited without explicit, written authorization from NSA Technologies LLC.**
 
-    // 3. Prepare digest (32 bytes)
-    let message = b"example message";
-    let digest = Sha3_256::digest(message);
-    let digest_b64 = STANDARD.encode(&digest);
+### 🏁 Getting Started & Integration
 
-    // 4. Context binding (use CBID bytes base64); for demo reuse digest (NOT for production)
-    let ctx_b64 = digest_b64.clone();
+To obtain access to the SDK artifacts, integration documentation, and API details:
 
-    // 5. Sign nonce 1
-    let sig = client.sign_digest(SignDigestRequest {
-        key_id: key.key_id.clone(),
-        digest: digest_b64,
-        context_binding: Some(ctx_b64),
-        nonce: 1,
-    }).await?;
+* **Approved Clients:** Please contact your designated NSA TECHNOLOGIES LLC Account Manager.
+* **Internal Teams:** All integration documentation, API details, and build artifacts can be found on our **Internal Documentation portal**: `Confluence/Element.`
 
-    println!("signature alg={} len={} nonce={}", sig.alg, sig.signature.len(), sig.nonce);
-    Ok(())
-}
-```
+### 🤝 Contact & Support
 
-## Nonce Tracking
-The SDK records `next_expected` locally after each successful sign. This is advisory only; the server remains authoritative.
+For technical support, integration requests, or partnership inquiries, please contact: +1 213 212 9344
 
-## Error Handling
-`Error` enum categorizes protocol-level issues (nonce out of order, key not found, etc.). For 429 rate limits you receive `Error::RateLimited` (retry strategy left to caller).
+***
 
-## License
-Proprietary — internal use only.
+© NSA Technologies LLC. All rights reserved.
