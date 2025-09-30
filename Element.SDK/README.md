@@ -5,15 +5,15 @@
 <br><br>
 
 
-## Element.SDK : Post-Quantum Cryptographics
+## Element.SDK
 
-Welcome to the **Element.SDK**, the secure, proprietary software development kit that connects your applications to the powerful **Element. Quantum Security Module (QSM)**.
+Element. has been engineered to deliver high-performance, quantum-safe cryptography specifically for demanding modern transport protocols. **While fundamentally a high-assurance Hardware Security Module (HSM)**, we brand it as a QSM to emphasize its specialization: securing traffic against quantum threats.
 
-Element. has been engineered to deliver high-performance, quantum-safe cryptography specifically for demanding modern transport protocols. **While fundamentally a high-assurance Hardware Security Module (HSM)**, we brand it as a QSM to emphasize its specialization: securing your traffic against the quantum threat.
+By offloading all critical cryptographic functions to our QSM service, **Element.**, we ensure your **QLS over QUIC** traffic is protected by an uncompromised, **root of trust**. This solution eliminates the typical performance and compliance overhead associated with PQC migration.
 
-By offloading all critical cryptographic functions to the **Element. QSM**, we ensure your **QLS over QUIC** traffic is protected by an uncompromised, **future-proof root of trust**. This solution eliminates the typical performance and compliance overhead associated with PQC migration.
+## Status: Alpha (HTTP JSON subset implemented:
 
-## Status: Alpha (HTTP JSON subset implemented: /keys, /sign, /sign/batch, /verify, /resolve, Kyber KEM, /cbid/derive, /session/issue, /health, /ready)
+/keys, /sign, /sign/batch, /verify, /resolve, Kyber KEM, /cbid/derive, /session/issue, /health, /ready
 
 Features (crate features):
 - http (default): enable HTTP transport via reqwest (aliased as `request`).
