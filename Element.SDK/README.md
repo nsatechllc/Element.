@@ -52,8 +52,8 @@ To obtain access to the SDK artifacts, integration documentation, and API detail
 
 ### 🤝 Contact & Support
 
-For technical support, integration requests, or partnership inquiries, please contact: +1 213 212 9344
+For technical support, integration requests, or partnership inquiries, please contact: hello@nsatech.llc
 
 ***
 
-© NSA Technologies LLC. All rights reserved.
+© NSA TECHNOLOGIES LLC. 2018, 2025. All rights reserved.
