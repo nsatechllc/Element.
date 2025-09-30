@@ -43,15 +43,15 @@ zeroize = "1.7"
 axum = { version = "0.7", features = ["json"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
 chrono = { version = "0.4", features = ["clock", "std"] }
-quinn = { version = "0.10", optional = true }
+quinn = { version = "0.11", optional = true }
 tokio-util = { version = "0.7", optional = true }
-oqs = { version = "0.9.0", default-features = false, features = ["sigs","kyber"], optional = true }
+oqs = { version = "0.11.0", default-features = false, features = ["sigs","kyber"], optional = true }
 tonic = { version = "0.14", features = ["transport"], optional = true }
 prost = { version = "0.14", optional = true }
 prost-types = { version = "0.14", optional = true }
 tonic-prost = { version = "0.14", optional = true }
 rcgen = { version = "0.13", optional = true }
-rustls = { version = "0.21", optional = true }
+rustls = { version = "0.23", optional = true }
 chacha20poly1305 = { version = "0.10", default-features = false, features = ["alloc"], optional = true }
 opentelemetry = { version = "0.23", optional = true }
 opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"], optional = true }

@@ -1,9 +1,15 @@
 [workspace]
 members = [
     "element",
+    "QLS/rustls-kyber",
+    "QLS/rustls-fork",
+    "Element.SDK",
     # "crates/crypto-pqc"  # add when vendored
 ]
 resolver = "2"
+
+[patch.crates-io]
+rustls = { path = "QLS/rustls-fork" }
 
 [workspace.package]
 edition = "2021"

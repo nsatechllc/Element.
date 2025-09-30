@@ -1,0 +1,32 @@
+[package]
+name = "rustls-kyber"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[features]
+# Build in stub mode by default until workspace oqs version unified
+default = []
+# Use layered HKDF extraction instead of hash-concatenation.
+layered-hkdf = []
+bench = []
+# Allow build without liboqs present (stub mode returns errors for KEM ops)
+stub = []
+
+[dependencies]
+sha3 = "0.10"
+zeroize = { version = "1.8", features=["zeroize_derive"] }
+oqs = { version = "0.11.0" }
+rand = "0.8"
+thiserror = "2"
+tracing = "0.1"
+
+[dev-dependencies]
+proptest = "1"
+hex = "0.4"
+
+[build-dependencies]
+
+[package.metadata.docs]
+# internal crate; no docs.rs

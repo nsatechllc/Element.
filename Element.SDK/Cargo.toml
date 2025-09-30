@@ -1,0 +1,36 @@
+[package]
+name = "element-sdk"
+version = "0.1.0"
+edition = "2021"
+license = "Proprietary"
+authors = ["4E5341 Engineering <eng@4e5341.local>"]
+
+[features]
+default = ["http", "retry"]
+# http feature pulls in reqwest dependency
+http = ["dep:request"]
+retry = []
+quic = []
+grpc = []
+structured-scope = []
+metrics-json = []
+hybrid-pq = []
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = "1.0"
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+hex = { workspace = true }
+sha3 = { workspace = true }
+base64 = "0.22"
+request = { package = "reqwest", version = "0.12", default-features = false, features = ["json", "rustls-tls"], optional = true }
+tokio = { version = "1.38", features = ["macros", "rt", "time", "sync"] }
+parking_lot = "0.12"
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[package.metadata.docs]
+# Placeholder for future documentation config

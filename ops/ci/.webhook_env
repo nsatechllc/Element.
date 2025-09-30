@@ -1,0 +1,4 @@
+GITHUB_WEBHOOK_SECRET=7a52cf6ba5918bc50229b3bc055102cd72d475c97e7f554f68e95d05b07f9cdd
+REPO_DIR=/home/nsatech/Element.
+PULL_SCRIPT=/home/nsatech/Element./ops/ci/pull_and_test.sh
+WEBHOOK_PORT=9000

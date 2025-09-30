@@ -1,0 +1,14 @@
+[Unit]
+Description=GitHub Webhook Puller
+After=network.target
+
+[Service]
+User=nsatech
+WorkingDirectory=/home/nsatech/Element./ops/ci
+EnvironmentFile=/home/nsatech/Element./ops/ci/.webhook_env
+ExecStart=/usr/bin/env python3 /home/nsatech/Element./ops/ci/webhook_puller.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
