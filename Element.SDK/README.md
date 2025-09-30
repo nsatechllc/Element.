@@ -5,7 +5,7 @@
 <br><br>
 
 
-## Element.SDK : Post-Quantum Cryptography
+## Element.SDK : Post-Quantum Cryptographics
 
 Welcome to the **Element.SDK**, the secure, proprietary software development kit that connects your applications to the powerful **Element. Quantum Security Module (QSM)**.
 
