@@ -60,7 +60,6 @@ Security Notes:
 Roadmap Alignment:
 P0: Structured scope signing, nonce introspection, audit log streaming (pending server features).
 
-License: Proprietary (internal use only).
 # Element.SDK
 
 ## Features
@@ -123,10 +122,6 @@ The SDK records `next_expected` locally after each successful sign. This is advi
 
 ## License
 Proprietary — internal use only.
-
-### 🤝 Contact & Support
-
-For technical support, integration requests, or partnership inquiries, please contact: hello@nsatech.llc
 
 ***
 
