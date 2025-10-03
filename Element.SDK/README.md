@@ -1,7 +1,7 @@
 <h1 align="center">Element.SDK : Post-Quantum Cryptographics</h1>
 <h3 align="center">by NSA TECHNOLOGIES LLC</h3>
 <p align="center"><b>Automated &nbsp;·&nbsp; Intelligent &nbsp;·&nbsp; Natural</b></p>
-<p align="center"><i>Architected by: Daniel J. Sopher</i></p>
+<p align="center"><i>Author: Daniel J. Sopher</i></p>
 <br><br>
 
 
